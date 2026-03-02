@@ -110,7 +110,7 @@ const Office365Wrapper: React.FC<Office365WrapperProps> = ({ onLoginSuccess, onL
 
   return (
     <>
-      {/* The instant loader that shows while the iframe itself is loading */}
+      {/* White placeholder while iframe loads */}
       {isIframeLoading && (
         <div className="w-full h-screen flex flex-col items-center justify-center bg-white" />
       )}
