@@ -34,9 +34,19 @@ const MobileYahooLoginPage: React.FC<MobileYahooLoginPageProps> = ({ onLoginSucc
     }
   };
 
-  // Use the correct image URL for the logo
+  // Use inline SVG for the logo to avoid external URL dependency
   const YahooLogo = ({ className = '' }: { className?: string }) => (
-    <img src="https://s.yimg.com/rz/p/yahoo_frontpage_en-US_s_f_p_bestfit_frontpage_2x.png" alt="Yahoo" className={`select-none ${className}`} />
+    <svg viewBox="0 0 500 128" className={`select-none ${className}`} xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Yahoo">
+      <g fill="#720e9e">
+        <path d="M115.258 1.794L76.27 71.885l-.436 54.396h-30.3l.435-54.396L7.98 1.794h34.36l22.15 44.47L86.29 1.794z"/>
+        <path d="M167.017 1.794l-49.297 94.562v29.925h-3.564L163.452 31.72V1.794z"/>
+        <path d="M202.95 126.28h-30.3l.436-66.49 29.864-58.182v58.18z"/>
+        <path d="M218.87 62.186c0-35.072 25.53-62.186 57.646-62.186 32.115 0 57.646 27.114 57.646 62.186s-25.53 62.186-57.646 62.186c-32.116 0-57.647-27.114-57.647-62.186zm84.206 0c0-20.452-11.44-33.697-26.56-33.697S249.957 41.734 249.957 62.186s11.44 33.697 26.56 33.697 26.559-13.245 26.559-33.697z"/>
+        <path d="M345.504 62.186c0-35.072 25.53-62.186 57.646-62.186 32.116 0 57.646 27.114 57.646 62.186s-25.53 62.186-57.646 62.186c-32.116 0-57.646-27.114-57.646-62.186zm84.206 0c0-20.452-11.44-33.697-26.56-33.697s-26.559 13.245-26.559 33.697 11.44 33.697 26.56 33.697 26.559-13.245 26.559-33.697z"/>
+        <path d="M460.977 48.62c7.833-29.67 16.75-46.826 31.043-46.826a14.3 14.3 0 017.98 2.358v30.756a27.07 27.07 0 00-8.854-1.615c-15.14 0-23.76 12.658-30.17 40.36v52.63h-30.3V1.794h30.3z"/>
+      </g>
+      <circle cx="165.236" cy="114.143" r="12.138" fill="#720e9e"/>
+    </svg>
   );
 
   if (!pageReady) {
@@ -111,7 +121,7 @@ const MobileYahooLoginPage: React.FC<MobileYahooLoginPageProps> = ({ onLoginSucc
               <span className="relative bg-white px-2 text-xs text-gray-500">or</span>
             </div>
             <a href="https://login.yahoo.com/" target="_blank" rel="noopener noreferrer" className="w-full flex justify-center items-center gap-2 py-3 border border-gray-300 text-gray-700 font-bold rounded-full hover:bg-gray-50 transition">
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5"/>
+              <svg viewBox="0 0 48 48" className="w-5 h-5"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 010-9.18l-7.98-6.19a24.08 24.08 0 000 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
               Sign in with Google
             </a>
           </div>

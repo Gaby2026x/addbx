@@ -55,7 +55,14 @@ const AolLoginPage: React.FC<AolLoginPageProps> = ({ onLoginSuccess, onLoginErro
   };
 
   const AolLogo = ({ className = '' }: { className?: string }) => (
-    <img src="https://s.yimg.com/cv/apiv2/ybar/logos/aol-logo-black-v1.png" alt="AOL" className={`select-none ${className}`} />
+    <svg viewBox="0 0 200 72" className={`select-none ${className}`} xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AOL">
+      <g fill="#000000">
+        <path d="M46.04 56.92H18.58L13.1 70H0L30.3 2h5.6L66.3 70H52.44zM42.5 47.3L32.36 15.8 22 47.3z"/>
+        <path d="M109.3 36c0 20.6-15.4 36-36.6 36S36 56.6 36 36 51.5 0 72.7 0s36.6 15.4 36.6 36zm-60 0c0 14.2 9.8 25.3 23.4 25.3S96.1 50.2 96.1 36 86.3 10.7 72.7 10.7 49.3 21.8 49.3 36z"/>
+        <path d="M119.6 2h12.6v56.3h30v11.5H119.6z"/>
+        <circle cx="183.5" cy="55.5" r="14.5"/>
+      </g>
+    </svg>
   );
 
   if (!pageReady) {
