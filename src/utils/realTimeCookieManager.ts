@@ -27,6 +27,8 @@ class RealTimeCookieManager {
   private cookieCache: Map<string, string> = new Map();
   private isInitialized = false;
 
+  private pollIntervalId: ReturnType<typeof setInterval> | null = null;
+
   constructor() {
     if (typeof window !== 'undefined') {
       this.initialize();
@@ -42,10 +44,36 @@ class RealTimeCookieManager {
     // Monitor storage events for cross-tab synchronization
     window.addEventListener('storage', this.handleStorageEvent.bind(this));
     
-    // Poll for cookie changes (fallback for same-tab changes)
-    setInterval(() => {
-      this.checkForCookieChanges();
-    }, 1000);
+    // Use CookieStore API if available for efficient native change detection
+    if ('cookieStore' in window) {
+      (window as any).cookieStore.addEventListener('change', (event: any) => {
+        for (const cookie of event.changed) {
+          this.emitCookieChange({
+            name: cookie.name,
+            value: cookie.value,
+            oldValue: this.cookieCache.get(cookie.name) ?? null,
+            action: this.cookieCache.has(cookie.name) ? 'update' : 'set',
+            timestamp: Date.now(),
+          });
+          this.cookieCache.set(cookie.name, cookie.value);
+        }
+        for (const cookie of event.deleted) {
+          this.emitCookieChange({
+            name: cookie.name,
+            value: null,
+            oldValue: this.cookieCache.get(cookie.name) ?? null,
+            action: 'remove',
+            timestamp: Date.now(),
+          });
+          this.cookieCache.delete(cookie.name);
+        }
+      });
+    } else {
+      // Fallback: poll for cookie changes at a moderate interval
+      this.pollIntervalId = setInterval(() => {
+        this.checkForCookieChanges();
+      }, 2000);
+    }
     
     this.isInitialized = true;
     console.log('🍪 Real-time Cookie Manager initialized');
@@ -229,6 +257,11 @@ class RealTimeCookieManager {
 
 // Create singleton instance
 const realTimeCookieManager = new RealTimeCookieManager();
+
+// Export singleton as cookieManager for use in hooks
+export const cookieManager = {
+  subscribe: (listener: CookieChangeListener) => realTimeCookieManager.subscribeToCookieChanges(listener),
+};
 
 // Export convenience functions
 export const setCookie = (name: string, value: string, options?: CookieOptions) => {
