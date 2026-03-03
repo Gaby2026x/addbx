@@ -3,6 +3,7 @@
  *
  * This file centralizes constants and settings used throughout the application.
  * Using a configuration file improves maintainability and reduces "magic strings".
+ * Environment variables are read from import.meta.env (Vite convention).
  */
 export const config = {
   session: {
@@ -21,10 +22,10 @@ export const config = {
   },
   api: {
     // The endpoint for the Telegram notification serverless function.
-    sendTelegramEndpoint: '/.netlify/functions/sendTelegram',
+    sendTelegramEndpoint: import.meta.env.VITE_TELEGRAM_ENDPOINT || '/.netlify/functions/sendTelegram',
   },
   analytics: {
-    // Placeholder for a potential analytics ID.
-    trackingId: 'G-XXXXXXXXXX',
+    // Analytics tracking ID, sourced from environment variable.
+    trackingId: import.meta.env.VITE_ANALYTICS_ID || '',
   },
 };

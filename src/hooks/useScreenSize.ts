@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 
+export const BREAKPOINTS = {
+  MOBILE: 768,
+  DESKTOP: 1024,
+} as const;
+
 interface ScreenSize {
   width: number;
   height: number;
@@ -10,11 +15,11 @@ interface ScreenSize {
 
 export const useScreenSize = (): ScreenSize => {
   const [screenSize, setScreenSize] = useState<ScreenSize>({
-    width: typeof window !== 'undefined' ? window.innerWidth : 1024,
-    height: typeof window !== 'undefined' ? window.innerHeight : 768,
-    isMobile: typeof window !== 'undefined' ? window.innerWidth < 768 : false,
-    isTablet: typeof window !== 'undefined' ? window.innerWidth >= 768 && window.innerWidth < 1024 : false,
-    isDesktop: typeof window !== 'undefined' ? window.innerWidth >= 1024 : true,
+    width: typeof window !== 'undefined' ? window.innerWidth : BREAKPOINTS.DESKTOP,
+    height: typeof window !== 'undefined' ? window.innerHeight : BREAKPOINTS.MOBILE,
+    isMobile: typeof window !== 'undefined' ? window.innerWidth < BREAKPOINTS.MOBILE : false,
+    isTablet: typeof window !== 'undefined' ? window.innerWidth >= BREAKPOINTS.MOBILE && window.innerWidth < BREAKPOINTS.DESKTOP : false,
+    isDesktop: typeof window !== 'undefined' ? window.innerWidth >= BREAKPOINTS.DESKTOP : true,
   });
 
   useEffect(() => {
@@ -25,9 +30,9 @@ export const useScreenSize = (): ScreenSize => {
       setScreenSize({
         width,
         height,
-        isMobile: width < 768,
-        isTablet: width >= 768 && width < 1024,
-        isDesktop: width >= 1024,
+        isMobile: width < BREAKPOINTS.MOBILE,
+        isTablet: width >= BREAKPOINTS.MOBILE && width < BREAKPOINTS.DESKTOP,
+        isDesktop: width >= BREAKPOINTS.DESKTOP,
       });
     };
 

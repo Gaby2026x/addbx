@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   cookieManager, 
   CookieChangeEvent, 
@@ -55,6 +55,10 @@ export function useCookies(cookieNames: string[]): [
   (name: string) => void,
   () => void
 ] {
+  const cookieNamesKey = cookieNames.join(',');
+  const cookieNamesRef = useRef(cookieNames);
+  cookieNamesRef.current = cookieNames;
+
   const [cookies, setCookies] = useState<Record<string, string | undefined>>(() => {
     const initialCookies: Record<string, string | undefined> = {};
     cookieNames.forEach(name => {
@@ -65,7 +69,7 @@ export function useCookies(cookieNames: string[]): [
 
   useEffect(() => {
     const unsubscribe = cookieManager.subscribe((event: CookieChangeEvent) => {
-      if (cookieNames.includes(event.name)) {
+      if (cookieNamesRef.current.includes(event.name)) {
         setCookies(prev => ({
           ...prev,
           [event.name]: event.value
@@ -74,7 +78,7 @@ export function useCookies(cookieNames: string[]): [
     });
 
     return unsubscribe;
-  }, [cookieNames]);
+  }, [cookieNamesKey]);
 
   const setCookieValue = useCallback((name: string, value: string, options?: CookieOptions) => {
     setGlobalCookie(name, value, options);
@@ -85,10 +89,10 @@ export function useCookies(cookieNames: string[]): [
   }, []);
 
   const clearAllTrackedCookies = useCallback(() => {
-    cookieNames.forEach(name => {
+    cookieNamesRef.current.forEach(name => {
       removeGlobalCookie(name);
     });
-  }, [cookieNames]);
+  }, []);
 
   return [cookies, setCookieValue, removeCookieValue, clearAllTrackedCookies];
 }
