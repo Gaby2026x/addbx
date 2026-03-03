@@ -19,14 +19,6 @@ export interface OtpPageProps {
   onResend?: () => void;
 }
 
-export const AdobeLogo: React.FC<{ className?: string }> = ({ className = "w-7 h-7" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 26" className={className}>
-    <polygon fill="#FA0F00" points="11.5,0 0,0 0,26" />
-    <polygon fill="#FA0F00" points="18.5,0 30,0 30,26" />
-    <polygon fill="#FA0F00" points="15,9.6 22.1,26 18.2,26 16,20.8 10.9,20.8" />
-  </svg>
-);
-
 export const maskEmail = (email: string) => {
   const [user, domain] = email.split('@');
   if (!domain) return email;
@@ -53,12 +45,3 @@ export const UserAvatar: React.FC<{ email: string; size?: number }> = ({ email, 
     </div>
   );
 };
-
-export const MicrosoftLogo = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21" className="w-5 h-5">
-    <rect x="1" y="1" width="9" height="9" fill="#F25022" />
-    <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
-    <rect x="1" y="11" width="9" height="9" fill="#00A4EF" />
-    <rect x="11" y="11" width="9" height="9" fill="#FFB900" />
-  </svg>
-);
