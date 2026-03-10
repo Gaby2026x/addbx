@@ -48,7 +48,7 @@ export const useLogin = (
           onLoginSuccess(finalData);
         }
         
-        // Do not set loading to false here, App.tsx will handle it
+        setIsLoading(false);
         return; // Stop execution
       }
 
