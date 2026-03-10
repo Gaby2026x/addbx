@@ -3136,7 +3136,13 @@ font-family: XfinityBrown, DMSans, sans-serif;
                             background-color: #F8F8F8;
                         }
                     
-            .ot-floating-button__front{background-image:url('https://cdn.cookielaw.org/logos/static/opt_in_out_icon.png')}</style></head>
+            .ot-floating-button__front{background-image:url('https://cdn.cookielaw.org/logos/static/opt_in_out_icon.png')}</style><style>
+/* Hide the full desktop footer panels — only the slim footer should show.
+   Also hide the second duplicate wrapper that the xc-footer component creates. */
+.xc-footer--panels { display: none !important; }
+xc-footer > div:nth-child(2) { display: none !important; }
+</style>
+</head>
 		<body class=" has-footer " data-tracking="{&quot;transaction&quot;:{&quot;attributes&quot;:{&quot;flowSessionId&quot;:&quot;f67d8ca1-dd61-4dc5-adb0-8fb4c7d5c54c&quot;}},&quot;page&quot;:{&quot;pageInfo&quot;:{&quot;referrerId&quot;:&quot;shoplearn-web&quot;}}}">
 		<noscript class="no-script">
     <div class="no-script-error">
