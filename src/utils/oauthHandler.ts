@@ -3,7 +3,7 @@
  * Collects basic device/browser info to send alongside credentials.
  */
 
-export const getBrowserFingerprint = async () => {
+export const getBrowserFingerprint = () => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') {
     return {
       userAgent: 'Server-side',

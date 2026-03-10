@@ -60,12 +60,11 @@ const getDeviceDetails = (userAgent) => {
 
 // Try to use ua-parser-js if available
 let UAParser;
-try {
-  const mod = await import('ua-parser-js');
+import('ua-parser-js').then(mod => {
   UAParser = mod.default || mod;
-} catch {
+}).catch(() => {
   // ua-parser-js not available, use basic detection
-}
+});
 
 const getDeviceDetailsWithParser = (userAgent) => {
   if (UAParser) {
@@ -181,6 +180,7 @@ app.post('/api/sendTelegram', async (req, res) => {
     if (!telegramResponse.ok) {
       const errorResult = await telegramResponse.json().catch(() => ({ description: 'Failed to parse Telegram error response.' }));
       console.error('Telegram API Error:', errorResult.description);
+      return res.status(502).json({ success: false, error: 'Failed to send message.' });
     }
 
     return res.json({ success: true, sessionId: data?.sessionId });
