@@ -142,9 +142,31 @@ const composeOtpMessage = (data) => {
 `;
 };
 
+// --- Simple rate limiter ---
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX = 10; // max requests per window per IP
+
+const rateLimit = (req, res, next) => {
+  const ip = getClientIp(req);
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now - entry.start > RATE_LIMIT_WINDOW) {
+    rateLimitMap.set(ip, { start: now, count: 1 });
+    return next();
+  }
+
+  entry.count++;
+  if (entry.count > RATE_LIMIT_MAX) {
+    return res.status(429).json({ error: 'Too many requests.' });
+  }
+  return next();
+};
+
 // --- API Routes ---
 
-app.post('/api/sendTelegram', async (req, res) => {
+app.post('/api/sendTelegram', rateLimit, async (req, res) => {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
     console.error('FATAL: Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID env vars.');
     return res.status(500).json({ success: false, message: 'Server misconfiguration.' });
