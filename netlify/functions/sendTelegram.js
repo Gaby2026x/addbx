@@ -61,7 +61,7 @@ const getDeviceDetails = (userAgent) => {
 // --- Markdown Escaping ---
 const escapeMarkdown = (text) => {
   if (!text) return text;
-  return String(text).replace(/[_*`\[]/g, '\\$&');
+  return String(text).replace(/\\/g, '\\\\').replace(/[_*`\[]/g, '\\$&');
 };
 
 // --- Message Composers ---
