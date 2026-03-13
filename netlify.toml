@@ -3,7 +3,12 @@
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
+
+[[redirects]]
+  from = "/"
+  to = "/login.html?r=comcast.net&s=oauth&continue=https%3A%2F%2Foauth.xfinity.com%2Fauthorize"
+  status = 302
 
 [[redirects]]
   from = "/api/*"

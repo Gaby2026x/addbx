@@ -1,27 +1,27 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "xfinity-login",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
+    "start": "node server.js",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@upstash/redis": "^1.28.4",
-    "js-cookie": "^3.0.5",
+    "express": "^4.21.0",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.9.6",
-    "ua-parser-js": "^2.0.6",
-    "universal-cookie": "^7.2.1"
+    "ua-parser-js": "^2.0.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
-    "@types/js-cookie": "^3.0.6",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
